@@ -13,10 +13,16 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-18.04
     
- #   strategy:
-  #    fail-fast: false
- #     matrix:
- #       techniques: [BugLocator,  BRTracer, BLUiR, AmaLgam,  BLIA, Locus]
+    strategy:
+      fail-fast: false
+      matrix:
+        #techniques: [BugLocator,  BRTracer, BLUiR, AmaLgam,  BLIA, Locus]
+        techniques: [Locus]
+        group: [Commons]
+        project: [CODEC]
+        folder_name: [Locus_Codec]        
+ 
+
 
     # Steps represent a sequence of tasks that will be executed as part of the job
 
@@ -49,8 +55,20 @@ jobs:
       - name: Download subjects’ archives
         run: |
               mkdir data
-              bootstrap/unpacking.sh ./archives ./data Apache CAMEL
-
+              bootstrap/unpacking.sh ./archives ./data ${{matrix.group}} ${{matrix.project}}
+              
+              
+              
+      - name: Upload data2
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          # Artifact name
+          name: all_data_start
+          # A file, directory or wildcard pattern that describes what to upload
+          path: ./data
+          
+              
       - name: Install Indri
         run: |
             mkdir depots
@@ -61,22 +79,18 @@ jobs:
             ./configure --prefix=`pwd`/../install
             make
             make install
-
       - name: Generate Settings.txt file
         run: |
             echo indripath=`git rev-parse --show-toplevel`/depots/install/bin/ > `git rev-parse --show-toplevel`/techniques/Settings.txt
-
       - name: Create virtual environment
         run: |
             cd `git rev-parse --show-toplevel`
             virtualenv venv -p `which python2`
             # source venv/bin/activate
             pip install -r requirements.txt
-
       - name: Build JAR
         run: |
             bootstrap/buildjar.sh
-
 #       - name: Source virtual environment
 #         run: |
 #             cd `git rev-parse --show-toplevel`
@@ -85,23 +99,29 @@ jobs:
       - name: Modify PATH
         run: |
             export PATH=$PATH:`pwd`/depots/install/bin
-
-
       - name: ls
         run: ls -R
 
       - name: Inflate the source codes
         run: |
             cd `git rev-parse --show-toplevel`/scripts
-            python launcher_GitInflator.py  -g Apache -p CAMEL
+            python launcher_GitInflator.py  -g ${{matrix.group}} -p ${{matrix.project}}
+            
+      - name: Upload data2
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          # Artifact name
+          name: all_data_center
+          # A file, directory or wildcard pattern that describes what to upload
+          path: ./data
 
       - name: Build bug repositories
         run: |
               cd `git rev-parse --show-toplevel`/scripts
-              python launcher_repoMaker.py  -g Apache -p CAMEL
-              python launcher_DupRepo.py  -g Apache -p CAMEL
-              python Counting.py  -g Apache -p CAMEL
-
+              python launcher_repoMaker.py  -g ${{matrix.group}} -p ${{matrix.project}}
+              python launcher_DupRepo.py  -g ${{matrix.group}} -p ${{matrix.project}}
+              python Counting.py  -g ${{matrix.group}} -p ${{matrix.project}}
 #       - name: Execute previous techniques
 #         run: |
 #               mkdir -p ../techniques/locus_properties
@@ -114,18 +134,41 @@ jobs:
       - name: Collect performance results
         run: |
               cd `git rev-parse --show-toplevel`/scripts
-              python launcher_Tool.py -w ExpFirst -g Commons -p LANG -t BugLocator 
-              python launcher_XLSResultsAll.py -w BugLocator_Lang
+              mkdir -p ../techniques/locus_properties
+              mkdir -p ../techniques/blia_properties
+              python launcher_Tool.py -w ${{matrix.folder_name}}   -g ${{matrix.group}} -p ${{matrix.project}} -t ${{matrix.techniques}}
 #              python launcher_Tool.py -w ExpFirst   -g Apache -p CAMEL -t ${{ matrix.techniques }}
 
-
-      - name: Upload data
+      - name: save performance results
+        run: |
+              cd `git rev-parse --show-toplevel`/scripts
+              python launcher_XLSResultsAll.py -w ${{matrix.folder_name}}
+#       - name: Upload data
+#         if: ${{ always() }}
+#         uses: actions/upload-artifact@v2
+#         with:
+#           # Artifact name
+#           name: all_data
+#           # A file, directory or wildcard pattern that describes what to upload
+#           path: ./expresults
+          
+      - name: Upload data2
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          # Artifact name
+          name: results
+          # A file, directory or wildcard pattern that describes what to upload
+          path: ./expresults
+          
+      
+      - name: Upload data3
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
           # Artifact name
           name: all_data
           # A file, directory or wildcard pattern that describes what to upload
-          path: ./expresults
-
-
+          path: ./data
+          
+      

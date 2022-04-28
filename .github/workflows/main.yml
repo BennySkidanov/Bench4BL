@@ -139,10 +139,10 @@ jobs:
               python launcher_Tool.py -w ${{matrix.folder_name}}   -g ${{matrix.group}} -p ${{matrix.project}} -t ${{matrix.techniques}}
 #              python launcher_Tool.py -w ExpFirst   -g Apache -p CAMEL -t ${{ matrix.techniques }}
 
-      - name: save performance results
-        run: |
-              cd `git rev-parse --show-toplevel`/scripts
-              python launcher_XLSResultsAll.py -w ${{matrix.folder_name}}
+#      - name: save performance results
+ #       run: |
+  #            cd `git rev-parse --show-toplevel`/scripts
+   #           python launcher_XLSResultsAll.py -w ${{matrix.folder_name}}
 #       - name: Upload data
 #         if: ${{ always() }}
 #         uses: actions/upload-artifact@v2

@@ -17,10 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         #techniques: [BugLocator,  BRTracer, BLUiR, AmaLgam,  BLIA, Locus]
-        techniques: [BugLocator,  BRTracer]
+        techniques: [BugLocator,  BRTracerת Locus]
         group: [Commons]
-        project: [CODEC]
-        folder_name: [BugLocator_Codec]        
+        project: [CSV]
+        folder_name: [BugLocator_Csv]        
  
 
 
